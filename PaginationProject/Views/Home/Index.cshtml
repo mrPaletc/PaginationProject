@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "ShowWeather";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <label class="form-check-label" for="flexRadioDefault1">Размер страницы</label>
+                    <input class="form-control form-control-lg" type="text" placeholder="10" value = 10 id="pagVal">
+                    <button type="button" class="btn btn-warning"  id="pag">Ввод</button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody class="load-list">
+                        </tbody>
+                    </table>
+                    <div class="card-footer">
+                        <ul class="pagination" id="load-pagination">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+<script>
+$(document).ready(function () {
+            var load = function (size, page) {
+                var size = $("#pagVal").val();
+                $.ajax({
+                    url: '@Url.Action("GetTable","Home")',
+                    type: "GET",
+                    data: { size: size, page: page },
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    success: function (result) {
+                        console.log(result);
+                        //строки таблицы
+                        var str = "";
+                        $.each(result.data, function (index, value) {
+                            var dateUpdated = new Date(value.Updated_at);
+                            str += "<tr>";
+                                str += "<td>" + value.id + "</td>";
+                                str += "<td>" + value.name + "</td>";
+                                str += "<td>" + value.value + "</td>";
+                            str += "</tr>";
+                            //пагинация
+                            var pagination_string = "";
+                            var pageCurrent = result.pageCurrent;
+                            var count = result.count;
+                            var pagesNum = result.pagesnum;
+                            var sizeOfFooter = 2;
+                            var start = pageCurrent - sizeOfFooter;
+                            var end = pageCurrent + sizeOfFooter;
+                            if(pageCurrent <= sizeOfFooter){
+                                start = 1;
+                            }
+                            if(pageCurrent >= pagesNum - sizeOfFooter){
+                                end = pagesNum;
+                            }
+                            if (pageCurrent > 1) {
+                                var pagePrevious = pageCurrent - 1;
+                                pagination_string += '<li class="page-item"><a href="" class="page-link" data-page=' + pagePrevious + '>Previous</a></li>';
+                            }
+                            if (pageCurrent > 3) {
+                                var pageFirst = 1;
+                                pagination_string += '<li class="page-item"><a href="" class="page-link" data-page=' + 1 + '>' + pageFirst + '</a></li>';
+                            }
+                            for (i = start; i <= end; i++){
+                                if (i == pageCurrent) {
+                                    pagination_string += '<li class="page-item active"><a href="" class="page-link" data-page=' + i + '>'+pageCurrent+'</a></li>';
+                                } else {
+                                    pagination_string += '<li class="page-item"><a href="" class="page-link" data-page=' + i + '>'+i+'</a></li>';
+                                }
+                             }
+                             
+                             if (pageCurrent < pagesNum - 2) {
+                                var pageFirst = 1;
+                                pagination_string += '<li class="page-item"><a href="" class="page-link" data-page=' + pagesNum + '>' + pagesNum + '</a></li>';
+                             }
+                             if (pageCurrent > 0 && pageCurrent < count) {
+                                var pageNext = pageCurrent + 1;
+                                pagination_string += '<li class="page-item"><a href="" class="page-link"  data-page=' + pageNext + '>Next</a></li>';
+                             }
+                             pagination_string += '<li class="page-item">Всего записей: '+ count +' </li>';
+                        $("#load-pagination").html(pagination_string);
+                     });
+                        $(".load-list").html(str);
+                    }
+                });
+
+                
+            }
+            $("body").on("click",".pagination li a",function (event) {
+                   event.preventDefault();
+                   var page = $(this).attr('data-page');
+                   var size = $("input[name='flexRadioDefault']:checked").val();
+                   load(size, page);
+            });
+            $("#pag").click(function () {
+                var txtSearch = $(".txtSearch").val();
+                if (txtSearch != "") {
+                    load(txtSearch, 1)
+                }
+                else {
+                    load(null, 1);
+                }
+            });
+   load(10, 1);
+});
+
+</script>
+}
